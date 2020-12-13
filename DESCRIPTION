@@ -1,0 +1,9 @@
+Name: logging
+Version: 0.0.1-alpha
+Date: 2020-12-13
+Author: Singon <singond@seznam.cz>
+Maintainer: Singon <singond@seznam.cz>
+Title: Logging
+Description: Logging facility for GNU Octave
+Categories: logging
+#License: GPLv3+
