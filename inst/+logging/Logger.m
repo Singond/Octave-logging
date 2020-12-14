@@ -3,12 +3,12 @@ classdef Logger < handle
 		loglevel = logging.Level.INFO;
 		destination = stdout();
 		destinationprivate = false;
-		sf = 3;
+		category = "";
 	endproperties
 
 	methods
 		function self = Logger()
-			## Do nothing
+			self.setcategory("callername");
 		endfunction
 
 		function delete(self)
@@ -16,27 +16,27 @@ classdef Logger < handle
 		endfunction
 
 		function trace(self, msg, varargin)
-			self.logmsg(logging.Level.TRACE, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.TRACE, msg, varargin{:});
 		endfunction
 
 		function debug(self, msg, varargin)
-			self.logmsg(logging.Level.DEBUG, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.DEBUG, msg, varargin{:});
 		endfunction
 
 		function info(self, msg, varargin)
-			self.logmsg(logging.Level.INFO, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.INFO, msg, varargin{:});
 		endfunction
 
 		function warn(self, msg, varargin)
-			self.logmsg(logging.Level.WARNING, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.WARNING, msg, varargin{:});
 		endfunction
 
 		function error(self, msg, varargin)
-			self.logmsg(logging.Level.ERROR, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.ERROR, msg, varargin{:});
 		endfunction
 
 		function fatal(self, msg, varargin)
-			self.logmsg(logging.Level.FATAL, self.sf, msg, varargin{:});
+			self.logmsg(logging.Level.FATAL, msg, varargin{:});
 		endfunction
 
 		function setlevel(self, level)
@@ -62,14 +62,42 @@ classdef Logger < handle
 				error("Logger.setdestination: DEST must be either a file handle or a filename");
 			endif
 		endfunction
+
+		function setcategory(self, category, opt)
+			if (nargin < 2)
+				error("Logger.setcategory: need at least one arrgument");
+			elseif (strcmp(category, "callername"))
+				if (nargin == 2 || nargin == 3)
+					if (nargin == 2)
+						opt = 1;
+					elseif (!isnumeric(opt) || !isscalar(opt) || opt < 1)
+						error("Logger.setcategory: LVL must be a positive integer");
+					endif
+					## Number of inner stack frames to skip in addition
+					## to those specified by user in 'opt'.
+					##   - callername
+					##   - @<anonymous>
+					##   - Logger.logmsg
+					##   - Logger.(trace|debug|info|warn|err|fatal)
+					skipframes = 4;
+					category = @() logging.Logger.callername(opt + skipframes);
+				else
+					error("Logger.setcategory: 'callername' needs zero or one argument");
+				endif
+			elseif (!ischar(category) && !is_function_handle(category))
+				error("Logger.setcategory: CATEGORY must be a string or a function handle");
+			endif
+			self.category = category;
+		endfunction
 	endmethods
 
 	methods (Access = private)
-		function logmsg(self, level, sf, msg, varargin)
+		function logmsg(self, level, msg, varargin)
 			## Obtain category name
-			stack = dbstack();
-			if (length(dbstack) >= sf)
-				category = stack(sf).name;
+			if (ischar(self.category))
+				category = self.category;
+			elseif (is_function_handle(self.category))
+				category = self.category();
 			else
 				category = "";
 			endif
@@ -100,6 +128,17 @@ classdef Logger < handle
 				logger = logging.Logger();
 			endif
 			lgr = logger;
+		endfunction
+	endmethods
+
+	methods (Static = true, Access = private)
+		function name = callername(levels)
+			stack = dbstack();
+			if (length(dbstack) >= levels)
+				name = stack(levels).name;
+			else
+				name = "";
+			endif
 		endfunction
 	endmethods
 endclassdef
