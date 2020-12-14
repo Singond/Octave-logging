@@ -4,6 +4,14 @@ classdef Logger < handle
 		destination = stdout();
 		destinationprivate = false;
 		category = "";
+		## Number of inner stack frames to be always hidden
+		## when determining category name from calling functions.
+		## By default, the stack frames to be hidden are:
+		##   - callername
+		##   - @<anonymous>
+		##   - Logger.logmsg
+		##   - Logger.(trace|debug|info|warn|err|fatal)
+		categoryskipframes = 4;
 	endproperties
 
 	methods
@@ -75,11 +83,7 @@ classdef Logger < handle
 					endif
 					## Number of inner stack frames to skip in addition
 					## to those specified by user in 'opt'.
-					##   - callername
-					##   - @<anonymous>
-					##   - Logger.logmsg
-					##   - Logger.(trace|debug|info|warn|err|fatal)
-					skipframes = 4;
+					skipframes = self.categoryskipframes;
 					category = @() logging.Logger.callername(opt + skipframes);
 				else
 					error("Logger.setcategory: 'callername' needs zero or one argument");
@@ -126,6 +130,12 @@ classdef Logger < handle
 			persistent logger;
 			if (isempty(logger))
 				logger = logging.Logger();
+				## Skip one more frame, because the default logger
+				## is expected to be always called from the wrapper
+				## functions logging.debug() etc.
+				logger.categoryskipframes += 1;
+				## Needs to be called after changing categoryskipframes
+				logger.setcategory("callername");
 			endif
 			lgr = logger;
 		endfunction
