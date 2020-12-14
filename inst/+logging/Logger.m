@@ -3,7 +3,7 @@ classdef Logger < handle
 		loglevel = logging.Level.INFO;
 		destination = stdout();
 		destinationprivate = false;
-		sf = 2;
+		sf = 3;
 	endproperties
 
 	methods
@@ -16,27 +16,27 @@ classdef Logger < handle
 		endfunction
 
 		function trace(self, msg, varargin)
-			self.logmsg(logging.Level.TRACE, 3, msg, varargin{:});
+			self.logmsg(logging.Level.TRACE, self.sf, msg, varargin{:});
 		endfunction
 
 		function debug(self, msg, varargin)
-			self.logmsg(logging.Level.DEBUG, 3, msg, varargin{:});
+			self.logmsg(logging.Level.DEBUG, self.sf, msg, varargin{:});
 		endfunction
 
 		function info(self, msg, varargin)
-			self.logmsg(logging.Level.INFO, 3, msg, varargin{:});
+			self.logmsg(logging.Level.INFO, self.sf, msg, varargin{:});
 		endfunction
 
 		function warn(self, msg, varargin)
-			self.logmsg(logging.Level.WARNING, 3, msg, varargin{:});
+			self.logmsg(logging.Level.WARNING, self.sf, msg, varargin{:});
 		endfunction
 
 		function error(self, msg, varargin)
-			self.logmsg(logging.Level.ERROR, 3, msg, varargin{:});
+			self.logmsg(logging.Level.ERROR, self.sf, msg, varargin{:});
 		endfunction
 
 		function fatal(self, msg, varargin)
-			self.logmsg(logging.Level.FATAL, 3, msg, varargin{:});
+			self.logmsg(logging.Level.FATAL, self.sf, msg, varargin{:});
 		endfunction
 
 		function setlevel(self, level)
