@@ -12,11 +12,14 @@ classdef Logger < handle
 		##   - Logger.logmsg
 		##   - Logger.(trace|debug|info|warn|err|fatal)
 		categoryskipframes = 4;
+		format;
+		printargsidx;
 	endproperties
 
 	methods
 		function self = Logger()
 			self.setcategory("callername");
+			self.setformat("%p [%c]: %m");
 		endfunction
 
 		function delete(self)
@@ -93,6 +96,41 @@ classdef Logger < handle
 			endif
 			self.category = category;
 		endfunction
+
+		function setformat(self, format)
+			[s, e, te, m, t, nm, sp] = regexp(format,
+				"%\-?[0-9]*\\.?[0-9]*([pcm])");
+			## t is a (1D?) cell array of cell arrays.
+			## The outer cell array has one element for each match.
+			## Each element is a (1D?) cell array containing
+			## one element for each matching group.
+			## The value of the element is the matched text of the group.
+			assert(size(t) == size(te));
+			## The value specifier is the 1st matching group in the regex
+			groupn = 1;
+			idxs = [];
+			for match = [t; te]
+				## Now 'match' is a cell array containing the matching groups
+				## (a cell array) and their extents (a numeric matrix).
+				grouptext = match{1}{groupn};
+				groupextent = match{2}(groupn,:);
+				if (strcmp(grouptext, "p"))
+					## Log level (p for "priority"? used as in Log4J)
+					idx = 1;
+				elseif (strcmp(grouptext, "c"))
+					## Log category
+					idx = 2;
+				elseif (strcmp(grouptext, "m"))
+					## Log message
+					idx = 3;
+				endif
+				idxs = [idxs idx];
+				format(groupextent(2)) = "s";
+			endfor
+			self.printargsidx = idxs;
+			## Add newline, because fprintf does not do so.
+			self.format = [format "\n"];
+		endfunction
 	endmethods
 
 	methods (Access = private)
@@ -110,10 +148,8 @@ classdef Logger < handle
 				if (!isempty(varargin))
 					msg = sprintf(msg, varargin{:});
 				endif
-				if (!isempty(category))
-					msg = [category ": " msg];
-				endif
-				fdisp(self.destination, msg);
+				printargs = {num2str(level), category, msg};
+				fprintf(self.format, printargs{self.printargsidx});
 			endif
 		endfunction
 
