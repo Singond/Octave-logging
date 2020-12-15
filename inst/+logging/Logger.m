@@ -51,8 +51,8 @@ classdef Logger < handle
 		endfunction
 
 		function setlevel(self, level)
-			if (!isnumeric(level) || !isscalar(level))
-				error("Logger.setlevel: LEVEL must be a single number");
+			if (!isstruct(level) || !isscalar(level))
+				error("Logger.setlevel: LEVEL must be a struct");
 			endif
 			self.loglevel = level;
 		endfunction
@@ -144,11 +144,11 @@ classdef Logger < handle
 				category = "";
 			endif
 
-			if (level >= self.loglevel)
+			if (level.value >= self.loglevel.value)
 				if (!isempty(varargin))
 					msg = sprintf(msg, varargin{:});
 				endif
-				printargs = {num2str(level), category, msg};
+				printargs = {level.name, category, msg};
 				fprintf(self.format, printargs{self.printargsidx});
 			endif
 		endfunction
