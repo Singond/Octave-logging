@@ -6,4 +6,4 @@ Maintainer: Singon <singond@seznam.cz>
 Title: Logging
 Description: Logging facility for GNU Octave
 Categories: logging
-#License: GPLv3+
+License: GPLv3+
